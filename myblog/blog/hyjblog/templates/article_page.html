@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Article Page</title>
+</head>
+<body>
+<h1>{{ article_page.title}}</h1>
+<br/>
+<h3>{{ article_page.content }}</h3>
+<br/><br/>
+<a href="">修改文章</a>
+{% for article in articles %}
+    <a href="">{{article.title}}</a>
+    <br/>
+ {% endfor %}
+</body>
+~                                                                              
+~                         
