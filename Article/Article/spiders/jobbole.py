@@ -3,10 +3,10 @@ import scrapy
 import re
 from urlparse import urljoin
 from scrapy import Request
-from Article.items import JobboleArticleItem
+from Article.sites.jobbole.jobbole_item import JobboleArticleItem
 from Article.util.common import get_md5
 import datetime
-from Article.items import JobboleArticleItemLoader
+from Article.sites.jobbole.jobbole_item import JobboleArticleItemLoader
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 from scrapy_redis.spiders import RedisSpider

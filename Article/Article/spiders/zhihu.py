@@ -2,14 +2,17 @@
 import scrapy
 import re
 from urlparse import urljoin
-from Article.items import ZhihuAnswerItem
+#from Article.items import ZhihuAnswerItem
 from scrapy import Request
-from Article.items import JobboleArticleItem
+#from Article.items import JobboleArticleItem
 from Article.util.common import get_md5
 import datetime
-from Article.items import ZhihuQuestionItemLoader
-from Article.items import ZhihuAnswerItemLoader
-from Article.items import ZhihuQuestionItem
+from Article.sites.zhihu.zhihu_item import ZhihuQuestionItemLoader
+from Article.sites.zhihu.zhihu_item import ZhihuAnswerItemLoader
+from Article.sites.zhihu.zhihu_item import ZhihuQuestionItem
+
+from Article.sites.zhihu.zhihu_item import ZhihuAnswerItem
+
 from selenium.webdriver.chrome.options import Options
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
@@ -24,6 +27,10 @@ class SspiderSpider(scrapy.Spider):
         'https://www.zhihu.com/',
     ]
     allowed_domins = ['www.zhihu.com']
+    custom_settings = { 
+        "COOKIES_ENABLED":True,
+        "DOWNLOAD_DELAY" : 5,
+    }
     start_answer_url = "https://www.zhihu.com/api/v4/questions/{0}/answers?include=data%5B*%5D.is_normal%2Cadmin_closed_comment%2Creward_info%2Cis_collapsed%2Cannotation_action%2Cannotation_detail%2Ccollapse_reason%2Cis_sticky%2Ccollapsed_by%2Csuggest_edit%2Ccomment_count%2Ccan_comment%2Ccontent%2Ceditable_content%2Cvoteup_count%2Creshipment_settings%2Ccomment_permission%2Ccreated_time%2Cupdated_time%2Creview_info%2Crelevant_info%2Cquestion%2Cexcerpt%2Crelationship.is_authorized%2Cis_author%2Cvoting%2Cis_thanked%2Cis_nothelp%2Cis_labeled%2Cis_recognized%3Bdata%5B*%5D.mark_infos%5B*%5D.url%3Bdata%5B*%5D.author.follower_count%2Cbadge%5B*%5D.topics&offset{1}=&limit={2}&sort_by=default&platform=desktop"
     
     @staticmethod
@@ -124,7 +131,7 @@ class SspiderSpider(scrapy.Spider):
       
      
         question_item_loader = ZhihuQuestionItemLoader(item = ZhihuQuestionItem(), response = response)
-
+        question_item_loader.add_value("url_object_id", get_md5(response.url))
         question_item_loader.add_value("url",response.url)
         question_item_loader.add_css("title",".QuestionHeader-title::text")
         match_re = "(.*zhihu.com/question/(\d+))(/|$).*"
@@ -133,7 +140,7 @@ class SspiderSpider(scrapy.Spider):
         if result:
             question_id = result.group(2)
 
-        question_item_loader.add_value("zhihu_id",question_id)
+        question_item_loader.add_value("question_id",question_id)
         question_item_loader.add_css("answer_num",".QuestionMainAction ViewAll-QuestionMainAction::text")
         question_item_loader.add_css("content", ".QuestionHeader-detail")
         question_item_loader.add_css("comments_num",".QuestionHeader-Comment button::text")
@@ -156,13 +163,13 @@ class SspiderSpider(scrapy.Spider):
         #提取answer的具体字段
         for answer in ans_json["data"]:
             answer_item = ZhihuAnswerItem()
-            answer_item["zhihu_id"] = answer["id"]
+            answer_item["url_obj_id"] = get_md5(url=answer["url"])
+            answer_item["answer_id"] = answer["id"]
             answer_item["url"] = answer["url"]
             answer_item["question_id"] = answer["question"]["id"]
             answer_item["author_id"] = answer["author"]["id"] if "id" in answer["author"] else None
         
-            
-            answer_item["content"] = answer["content"] if "content" in answer else None
+            answer_item["content"] = answer["content"] if "content" in answer else ""
             answer_item["praise_num"] = answer["voteup_count"]
             answer_item["comments_num"] = answer["comment_count"]
             answer_item["create_time"] = answer["created_time"]

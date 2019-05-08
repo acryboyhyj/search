@@ -18,11 +18,18 @@ from django.contrib import admin
 from django.views.generic import TemplateView
 from Search.views import SearchSuggest
 
-
+from Search.views import SearchView, IndexView
+from django.conf.urls import handler400, handler403, handler404, handler500
+from Search import views
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
-    url(r'^$', TemplateView.as_view(template_name="index.html"),name="index"),
-
+    url(r'^$', IndexView.as_view(),name="index"),
+    url(r'^search/$',SearchView.as_view(),name="search"),
     url(r'^suggest/$', SearchSuggest.as_view(), name="suggest"),
 
 ]
+
+handler400 = views.bad_request
+handler403 = views.permission_denied
+handler404 = views.page_not_found
+handler500 = views.server_error

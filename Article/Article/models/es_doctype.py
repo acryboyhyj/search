@@ -4,9 +4,9 @@ from elasticsearch_dsl import DocType, Date, Integer, Keyword, Text,Document,Com
 from elasticsearch_dsl.connections import connections
 # Define a default Elasticsearch client
 connections.create_connection(hosts=['localhost'])
-
-class Article(DocType):
-    suggest = Completion(analyzer("ik_max_word",filter = ['lowercase']))
+my_analyzer = analyzer('ik_smart')
+class JobboleBlogIndex(Document):
+    suggest = Completion(analyzer = my_analyzer)
     title = Text(analyzer="ik_max_word")
     tags = Text(analyzer="ik_max_word")
     create_date = Date()
@@ -18,10 +18,10 @@ class Article(DocType):
     content = Text(analyzer="ik_max_word")
  
     class Index:
-        name = "jobbole"
+        name = "jobbole_blog"
  
    
 # create the mappings in elasticsearch
 
 if __name__ == '__main__':
-    Article.init()
+    JobboleBlogIndex.init()

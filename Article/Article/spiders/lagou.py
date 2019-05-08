@@ -4,8 +4,8 @@
 import datetime
 from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import CrawlSpider, Rule
-from Article.items import LagouJobItemLoader
-from Article.items import LagouJobItem
+from Article.sites.lagou.lagou_item import LagouJobItemLoader
+from Article.sites.lagou.lagou_item import LagouJobItem
 from Article.util.common import get_md5
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
@@ -13,8 +13,11 @@ from selenium.webdriver.common.keys import Keys
 class LagouSpider(CrawlSpider):
     name = 'lagou'
     allowed_domains = ['www.lagou.com']
-    start_urls = ['http://www.lagou.com/']
-
+    start_urls = ['https://www.lagou.com/']
+    custom_settings = {
+        "COOKIES_ENABLED":False,
+        "DOWNLOAD_DELAY":5
+    }
     rules = (
         Rule(LinkExtractor(allow=("zhaopin/.*",)), follow=True),
         Rule(LinkExtractor(allow=("gongsi/j\d+.html",)), follow=True),
