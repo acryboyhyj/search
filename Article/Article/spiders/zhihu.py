@@ -2,15 +2,13 @@
 import scrapy
 import re
 from urlparse import urljoin
-#from Article.items import ZhihuAnswerItem
 from scrapy import Request
-#from Article.items import JobboleArticleItem
 from Article.util.common import get_md5
 import datetime
 from Article.sites.zhihu.zhihu_item import ZhihuQuestionItemLoader
 from Article.sites.zhihu.zhihu_item import ZhihuAnswerItemLoader
 from Article.sites.zhihu.zhihu_item import ZhihuQuestionItem
-
+from Article.sites.zhihu.zhihu_item import ZhihuQuestionItem
 from Article.sites.zhihu.zhihu_item import ZhihuAnswerItem
 
 from selenium.webdriver.chrome.options import Options
@@ -131,7 +129,7 @@ class SspiderSpider(scrapy.Spider):
       
      
         question_item_loader = ZhihuQuestionItemLoader(item = ZhihuQuestionItem(), response = response)
-        question_item_loader.add_value("url_object_id", get_md5(response.url))
+        question_item_loader.add_value("url_obj_id", get_md5(response.url))
         question_item_loader.add_value("url",response.url)
         question_item_loader.add_css("title",".QuestionHeader-title::text")
         match_re = "(.*zhihu.com/question/(\d+))(/|$).*"
@@ -152,7 +150,7 @@ class SspiderSpider(scrapy.Spider):
         answer_url = response.xpath("//a[@class='UserLink-link']/@href")
         question_item = question_item_loader.load_item()
         yield question_item  
-        yield scrapy.Request(self.start_answer_url.format(question_id, 0, 5), callback=self.parse_answer)
+        yield scrapy.Request(self.start_answer_url.format(question_id, 0, 20), callback=self.parse_answer)
 
         
     def parse_answer(self, response):
@@ -168,7 +166,7 @@ class SspiderSpider(scrapy.Spider):
             answer_item["url"] = answer["url"]
             answer_item["question_id"] = answer["question"]["id"]
             answer_item["author_id"] = answer["author"]["id"] if "id" in answer["author"] else None
-        
+            answer_item["author_name"] = answer["author"]["name"] if "name" in answer["author"] else None
             answer_item["content"] = answer["content"] if "content" in answer else ""
             answer_item["praise_num"] = answer["voteup_count"]
             answer_item["comments_num"] = answer["comment_count"]

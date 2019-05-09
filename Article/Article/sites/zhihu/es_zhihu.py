@@ -33,7 +33,7 @@ class ZhiHuAnswerIndex(Document):
     answer_id = Keyword()
     question_id = Keyword()
     author_id = Keyword()
-
+    author_name = Keyword()
     content = Text(analyzer="ik_smart")
     praise_num = Keyword()
     comments_num = Integer()

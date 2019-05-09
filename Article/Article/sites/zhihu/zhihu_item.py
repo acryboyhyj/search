@@ -34,7 +34,7 @@ class ZhihuQuestionItem(scrapy.Item, MysqlItem, EsItem):
     url_obj_id = scrapy.Field()
     title = scrapy.Field()
     question_id = scrapy.Field()
-
+    url = scrapy.Field()
     topics= scrapy.Field()
     answer_num= scrapy.Field(
         input_processor=MapCompose(get_nums)
@@ -97,7 +97,6 @@ class ZhihuQuestionItem(scrapy.Item, MysqlItem, EsItem):
         def save_to_es(self):
             self.clean_data()
             zhihu = ZhiHuQuestionIndex()
-            zhihu.meta.id = self["url_ob_id"]
             zhihu.question_id = self["question_id"]
             zhihu.title = self["title"]
             zhihu.content = self["content"]
@@ -132,14 +131,16 @@ class ZhihuAnswerItem(scrapy.Item, MysqlItem, EsItem):
     create_time= scrapy.Field()
     update_time= scrapy.Field()
     crawl_time= scrapy.Field()
-    
+    author_name = scrapy.Field()    
     def clean_data(self):
         try:
             self["praise_num"] = extract_num("".join(self["praise_num"]))
         except BaseException:
             self["praise_num"] = 0
-        self["comments_num"] = extract_num("".join(self["comments_num"]))
-
+        try: 
+            self["comments_num"] = extract_num("".join(self["comments_num"]))
+        except BaseException:
+            self["comments_num"] = 0
         self["create_time"] = datetime.datetime.fromtimestamp(
             self["create_time"]).strftime(SQL_DATETIME_FORMAT)
         try:
@@ -159,7 +160,7 @@ class ZhihuAnswerItem(scrapy.Item, MysqlItem, EsItem):
         zhihu.answer_id = self["answer_id"]
         zhihu.question_id = self["question_id"]
         zhihu.author_id = self["author_id"]
-
+        zhihu.author_name = self["author_name"]
         zhihu.content = self["content"]
         zhihu.praise_num = self["praise_num"]
         zhihu.comments_num = self["comments_num"]
