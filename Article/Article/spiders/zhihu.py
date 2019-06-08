@@ -5,11 +5,10 @@ from urlparse import urljoin
 from scrapy import Request
 from Article.util.common import get_md5
 import datetime
-from Article.sites.zhihu.zhihu_item import ZhihuQuestionItemLoader
-from Article.sites.zhihu.zhihu_item import ZhihuAnswerItemLoader
-from Article.sites.zhihu.zhihu_item import ZhihuQuestionItem
-from Article.sites.zhihu.zhihu_item import ZhihuQuestionItem
-from Article.sites.zhihu.zhihu_item import ZhihuAnswerItem
+from Article.sites.zhihu.zhihu_question_item import ZhihuQuestionItemLoader
+from Article.sites.zhihu.zhihu_answer_item import ZhihuAnswerItemLoader
+from Article.sites.zhihu.zhihu_question_item import ZhihuQuestionItem
+from Article.sites.zhihu.zhihu_answer_item import ZhihuAnswerItem
 
 from selenium.webdriver.chrome.options import Options
 from selenium import webdriver
@@ -27,7 +26,7 @@ class SspiderSpider(scrapy.Spider):
     allowed_domins = ['www.zhihu.com']
     custom_settings = { 
         "COOKIES_ENABLED":True,
-        "DOWNLOAD_DELAY" : 5,
+        "DOWNLOAD_DELAY" : 10,
     }
     start_answer_url = "https://www.zhihu.com/api/v4/questions/{0}/answers?include=data%5B*%5D.is_normal%2Cadmin_closed_comment%2Creward_info%2Cis_collapsed%2Cannotation_action%2Cannotation_detail%2Ccollapse_reason%2Cis_sticky%2Ccollapsed_by%2Csuggest_edit%2Ccomment_count%2Ccan_comment%2Ccontent%2Ceditable_content%2Cvoteup_count%2Creshipment_settings%2Ccomment_permission%2Ccreated_time%2Cupdated_time%2Creview_info%2Crelevant_info%2Cquestion%2Cexcerpt%2Crelationship.is_authorized%2Cis_author%2Cvoting%2Cis_thanked%2Cis_nothelp%2Cis_labeled%2Cis_recognized%3Bdata%5B*%5D.mark_infos%5B*%5D.url%3Bdata%5B*%5D.author.follower_count%2Cbadge%5B*%5D.topics&offset{1}=&limit={2}&sort_by=default&platform=desktop"
     
@@ -146,12 +145,14 @@ class SspiderSpider(scrapy.Spider):
         question_item_loader.add_css("click_num",".NumberBoard-itemName strong::text")
         question_item_loader.add_css("topics", ".Popover div::text")
         question_item_loader.add_value("crawl_time", datetime.datetime.now())
-
         answer_url = response.xpath("//a[@class='UserLink-link']/@href")
         question_item = question_item_loader.load_item()
+         
         yield question_item  
-        yield scrapy.Request(self.start_answer_url.format(question_id, 0, 20), callback=self.parse_answer)
 
+
+        yield scrapy.Request(self.start_answer_url.format(question_id, 0, 20), callback=self.parse_answer)
+        
         
     def parse_answer(self, response):
         ans_json = json.loads(response.text)
@@ -159,6 +160,9 @@ class SspiderSpider(scrapy.Spider):
         next_url = ans_json["paging"]["next"]
 
         #提取answer的具体字段
+
+                  
+
         for answer in ans_json["data"]:
             answer_item = ZhihuAnswerItem()
             answer_item["url_obj_id"] = get_md5(url=answer["url"])
@@ -173,6 +177,7 @@ class SspiderSpider(scrapy.Spider):
             answer_item["create_time"] = answer["created_time"]
             answer_item["update_time"] = answer["updated_time"]
             answer_item["crawl_time"] = datetime.datetime.now()
+
 
             yield answer_item
 

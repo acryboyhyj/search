@@ -18,6 +18,9 @@ class SspiderSpider(scrapy.Spider):
         'http://blog.jobbole.com/all-posts',
     ]
     allowed_domins = ['blog.jobbole']
+    custom_settings = {
+        "DOWNLOAD_DELAY" : 5,
+    }
    
     #tiqu all article
     def parse(self,response):

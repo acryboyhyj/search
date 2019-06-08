@@ -74,8 +74,9 @@ ITEM_PIPELINES = {
     #'Article.pipelines.JsonExpoterPipeline' : 5
     #'Article.pipelines.MysqlPipeline':5
     'Article.pipelines.DefaultValuesPipeline':4,
-   # 'Article.pipelines.MysqlTwistedPipline':10,
-   'Article.pipelines.EsPipeline':11
+    #'Article.pipelines.MysqlTwistedPipline':10,
+    'Article.pipelines.EsPipeline':11
+
 }
 IMAGES_URLS_FIELD="image_urls"
 project_dir=os.path.abspath(os.path.dirname(__file__))

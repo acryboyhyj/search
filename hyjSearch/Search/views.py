@@ -6,7 +6,7 @@ import json
 
 from django.utils.datastructures import OrderedSet
 from django.views.generic.base import View
-from Search.models import JobboleBlogIndex
+from Search.models import JobboleBlogIndex,LagouJobIndex, ZhiHuQuestionIndex, ZhiHuAnswerIndex
 from django.http import HttpResponse
 from datetime import datetime
 import redis
@@ -116,6 +116,7 @@ class SearchView(View):
         # 获取伯乐在线的文章数量
 
         jobbole_count = redis_cli.get("jobbole_blog_count")
+        print("jobbole_count:{0}".format(jobbole_count))
         if jobbole_count:
             jobbole_count = pickle.loads(jobbole_count)
         else:
@@ -155,7 +156,8 @@ class SearchView(View):
                     "query": {
                         "multi_match": {
                             "query": key_words,
-                            "fields": ["tags", "title", "content"]
+                            "fields": ["tags", "title", "content"],
+                            "fuzziness":"AUTO"
                         }
                     },
                     "from": (page - 1) * 10,
@@ -172,7 +174,7 @@ class SearchView(View):
             )
         elif s_type == "job":
             response = client.search(
-                index="lagou_job",
+                index="lagou",
                 request_timeout=60,
                 body={
                     "query": {
@@ -186,7 +188,11 @@ class SearchView(View):
                                 "company_name",
                                 "job_addr",
                                 "job_city",
-                                "degree_need"]}},
+                                "degree_need"],
+                            "fuzziness":"AUTO"
+                            }
+
+                            },
                     "from": (
                                     page - 1) * 10,
                     "size": 10,
@@ -207,9 +213,12 @@ class SearchView(View):
                         "multi_match": {
                             "query": key_words,
                             "fields": [
-                                "title",
+                               "title",
                                 "content",
-                                "topics"]}},
+                                "topics"],
+
+                            "fuzziness":"AUTO"
+                            }},
                     "from": (page - 1) * 10,
                     "size": 10,
                     "highlight": {
@@ -228,7 +237,10 @@ class SearchView(View):
                             "query": key_words,
                             "fields": [
                                 "content",
-                                "author_name"]}},
+                                "author_name"],
+                            
+                            "fuzziness":"AUTO"
+                            }},
                     "from": (
                                     page - 1) * 10,
                     "size": 10,
@@ -242,8 +254,10 @@ class SearchView(View):
 
         end_time = datetime.now()
         last_seconds = (end_time - start_time).total_seconds()
-
-        total_nums = response["hits"]["total"]
+        if "hits" not in response:
+            total_nums = 1
+        else:
+            total_nums = response["hits"]["total"]
         # 计算出总页数
         if (page % 10) > 0:
             page_nums = int(total_nums / 10) + 1

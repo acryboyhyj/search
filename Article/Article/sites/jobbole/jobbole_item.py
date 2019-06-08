@@ -13,7 +13,7 @@ from elasticsearch_dsl.connections import connections
 import redis
 from Article.items import MysqlItem,EsItem
 from Article.util.es_util import gen_suggests
-
+from Article.util.common import real_time_count
 from Article.util.common import extract_num
 
 es = connections.create_connection(JobboleBlogIndex)
@@ -79,16 +79,16 @@ class JobboleArticleItem(scrapy.Item, MysqlItem, EsItem):
             print(field, "= scrapy.Field()")
     def clean_data(self):
         if self["image_urls"]:
-            self["image_urls"] = self["image_urls"][0]
+            self["image_urls"] = self["image_urls"]
         
     def save_to_mysql(self):
         self.clean_data()
         insert_sql = """
-            insert into article(url_obj_id, title, url, create_date, praisenum)
-            VALUES (%s, %s, %s, %s, %s) ON DUPLICATE KEY UPDATE content=VALUES(praisenum)
+            insert into article(url_obj_id, title, url, create_date, praisenum,content)
+            VALUES (%s, %s, %s, %s, %s,%s) ON DUPLICATE KEY UPDATE content=VALUES(praisenum)
         """
-        params = (self['url_obj_id'],self["title"], self["url"], self["create_date"], self["praisenum"])
-
+        params = (self['url_obj_id'],self["title"], self["url"], self["create_date"], self["praisenum"],self["content"])
+        
         return insert_sql, params
 
     def save_to_es(self):
@@ -104,9 +104,10 @@ class JobboleArticleItem(scrapy.Item, MysqlItem, EsItem):
         article.url = self["url"]
         article.meta.id = self["url_obj_id"]
         article.suggest = gen_suggests(es,"jobbole_blog" ,((article.title,10),(article.tags, 7)))
+        
+        real_time_count('job_blog_count', JOBBOLE_COUNT_INIT)
+
         article.save()
-        redis_cli.incr("jobbole_blog_count")
-        return
 
  
 
